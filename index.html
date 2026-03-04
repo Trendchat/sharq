@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>نظام الشرق لإدارة المخزون والمبيعات</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body oncontextmenu="return false;">
+
+    <div class="top-nav">
+        <h2>نظام الشرق</h2>
+        <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    </div>
+
+    <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="sidebar" id="sidebar">
+        <h2>نظام الشرق</h2>
+        <button class="nav-btn active" onclick="showScreen('dashboardScreen', this)">📊 لوحة التحكم</button>
+        <button class="nav-btn" onclick="showScreen('salesScreen', this)">🛒 الكاشير (POS)</button>
+        <button class="nav-btn" onclick="showScreen('inventoryScreen', this)">📦 المخزون والأصناف</button>
+        <button class="nav-btn" onclick="showScreen('customersScreen', this)">👥 العملاء والديون</button>
+        <button class="nav-btn" onclick="showScreen('reportsScreen', this)">📈 التقارير</button>
+        <button class="nav-btn" onclick="showScreen('analyticsScreen', this)">🧠 تحليلات وذكاء المتجر</button>
+        <button class="nav-btn" onclick="showScreen('cloudScreen', this); initCloudSystem()">☁️ النسخ الاحتياطي (أونلاين)</button>
+    </div>
+
+    <div class="main-content">
+        
+        <div id="dashboardScreen" class="screen active">
+            <h2>نظرة عامة</h2><br>
+            <div class="cards">
+                <div class="card" style="border-top: 4px solid var(--primary);">
+                    <h3>رأس المال (تكلفة المخزون)</h3>
+                    <p id="dashCapital" dir="ltr">0</p>
+                </div>
+                <div class="card" style="border-top: 4px solid var(--accent);">
+                    <h3>إجمالي المبيعات</h3>
+                    <p id="dashSales" style="color: var(--accent);" dir="ltr">0</p>
+                </div>
+                <div class="card" style="border-top: 4px solid var(--success);">
+                    <h3>إجمالي الأرباح</h3>
+                    <p id="dashProfit" style="color: var(--success);" dir="ltr">0</p>
+                </div>
+                <div class="card" style="border-top: 4px solid var(--danger);">
+                    <h3>إجمالي الديون (سلف)</h3>
+                    <p id="dashDebt" style="color: var(--danger);" dir="ltr">0</p>
+                </div>
+                <div class="card" style="border-top: 4px solid #9b59b6;">
+                    <h3>الأصناف المتوفرة حالياً</h3>
+                    <p id="dashItemsCount" style="color: #9b59b6;">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="inventoryScreen" class="screen">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>إدارة المخزون</h2>
+                <button class="btn btn-success" onclick="openModal('addProductModal')">➕ إضافة صنف جديد</button>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>الصنف</th>
+                            <th>الوحدات (أم/كبرى)</th>
+                            <th>المتوفر</th>
+                            <th>التكلفة/البيع (للأم)</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="salesScreen" class="screen">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h2>نقطة البيع السريعة</h2>
+                <label style="background: #fff; padding: 8px 15px; border-radius: 6px; cursor: pointer; border: 1px solid #ddd; font-weight: bold; color: var(--primary);">
+                    <input type="checkbox" id="autoPrint" checked> 🖨️ طباعة تلقائية
+                </label>
+            </div>
+
+            <div class="pos-layout">
+                <div class="pos-products-area">
+                    <input type="text" id="fastSearch" class="search-input" style="margin-bottom: 10px;" placeholder="🔍 ابحث بالاسم أو الباركود السريع..." onkeyup="renderFastProducts()">
+                    <div class="pos-products-grid" id="fastProductGrid">
+                        </div>
+                </div>
+                
+                <div class="pos-cart-area">
+                    <div class="cart-header">🛒 الفاتورة الحالية</div>
+                    <div class="cart-items" id="fastCartItems">
+                        <p style="text-align:center; padding: 20px; color:#7f8c8d; font-size: 14px;">السلة فارغة، اضغط على الأصناف لإضافتها</p>
+                    </div>
+                    
+                    <div class="cart-summary">
+                        الإجمالي: <span id="fastGrandTotal">0</span>
+                    </div>
+                    
+                    <div class="cart-actions">
+                        <input type="text" id="optionalCashName" placeholder="اسم العميل (يظهر في الفاتورة النقدية - اختياري)" class="search-input" style="margin-bottom: 5px; padding: 10px;">
+                        
+                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+                            <button class="btn btn-success" style="font-size: 18px; padding: 15px;" onclick="fastCashCheckout()">💵 دفع كـاش</button>
+                            <button class="btn btn-warning" onclick="clearCart()">🗑️ تفريغ</button>
+                        </div>
+                        <button class="btn btn-primary btn-full" style="background-color: var(--secondary); margin-top: 10px;" onclick="startCheckoutCredit()">📝 دفع آجل (سلف)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="customersScreen" class="screen">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>العملاء والديون (السلف)</h2>
+                <button class="btn btn-success" onclick="openModal('addCustomerModal')">➕ إضافة عميل</button>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>اسم العميل</th>
+                            <th>رقم الهاتف</th>
+                            <th>إجمالي المديونية</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customersTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="reportsScreen" class="screen">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>التقارير وسجل الحركات</h2>
+                <button class="btn" onclick="openModal('reportFilterModal')">📅 تصفية بالتاريخ</button>
+            </div>
+            
+            <div class="cards" style="margin-top: 15px;">
+                <div class="card"><h3>مبيعات الفترة المحددة</h3><p id="repSales" dir="ltr">0</p></div>
+                <div class="card"><h3>أرباح الفترة المحددة</h3><p id="repProfit" style="color:var(--success);" dir="ltr">0</p></div>
+                <div class="card"><h3>عدد الفواتير</h3><p id="repCount">0</p></div>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>التاريخ والوقت</th>
+                            <th>النوع</th>
+                            <th>العميل</th>
+                            <th>تفاصيل الفاتورة</th>
+                            <th>الإجمالي</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportsTable"></tbody>
+                </table>
+            </div>
+            <br>
+            <button class="btn btn-danger" style="box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);" onclick="confirmClearAllData()">⚠️ تصفير النظام بالكامل</button>
+        </div>
+
+        <div id="analyticsScreen" class="screen">
+            <h2>🧠 تحليلات وذكاء المتجر (آخر 7 أيام)</h2><br>
+            
+            <div class="cards">
+                <div class="card" style="grid-column: 1 / -1; text-align: right;">
+                    <h3>📈 الحركة اليومية للمبيعات</h3>
+                    <div id="dailySalesChart" style="margin-top: 15px;"></div>
+                </div>
+            </div>
+
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #eee;">
+                    <h3 style="color: var(--success); margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px;">🔥 الأصناف الأكثر طلباً</h3>
+                    <div id="topItemsList"></div>
+                </div>
+                
+                <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #eee; border-top: 4px solid var(--warning);">
+                    <h3 style="color: var(--danger); margin-bottom: 15px;">🛒 قائمة التوريد الذكية (مقترحات)</h3>
+                    <p style="font-size: 12px; color: #7f8c8d; margin-bottom: 15px;">يعتمد على نقص المخزون مقارنة بسرعة بيع الصنف.</p>
+                    <div id="smartRestockList"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="cloudScreen" class="screen">
+            <h2>☁️ الملف الشخصي والنسخ الاحتياطي</h2>
+            <br>
+            
+            <div id="cloudLoader" style="display:none; text-align:center; padding:20px;">
+                <p>جاري الاتصال بالسحابة...</p>
+                <div class="loader-spinner"></div>
+            </div>
+
+            <div id="authSection" class="cards" style="max-width: 500px; margin: 0 auto; display: block;">
+                <div class="card" style="text-align: right;">
+                    <h3 style="color: var(--primary); font-size: 18px; margin-bottom: 15px;">تسجيل الدخول / إنشاء حساب</h3>
+                    <div class="form-group">
+                        <label>اسم المستخدم (User ID)</label>
+                        <input type="text" id="cloud_user" placeholder="أدخل اسم مستخدم مميز">
+                    </div>
+                    <div class="form-group">
+                        <label>كلمة المرور</label>
+                        <input type="password" id="cloud_pass" placeholder="********">
+                    </div>
+                    <div class="form-grid" style="margin-top: 20px;">
+                        <button class="btn btn-success" onclick="cloudLogin()">دخول وتنزيل</button>
+                        <button class="btn btn-primary" onclick="cloudSignup()">إنشاء حساب جديد</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="cloudDashboard" style="display: none;">
+                <div class="card" style="margin-bottom: 20px; border-right: 4px solid var(--success);">
+                    <h3>المستخدم الحالي</h3>
+                    <p id="cloud_current_user" dir="ltr">--</p>
+                </div>
+
+                <div class="cards">
+                    <div class="card" onclick="doBackup()">
+                        <h3>رفع نسخة احتياطية</h3>
+                        <p style="font-size: 15px; color: var(--primary);">🔼 رفع البيانات إلى السحابة</p>
+                        <small style="color:var(--danger); display:block; margin-top:5px;">(متبقي لك اليوم: <span id="backupLimit">3</span> مرات)</small>
+                    </div>
+
+                    <div class="card" onclick="doRestore(true)">
+                        <h3>تنزيل نسخة احتياطية</h3>
+                        <p style="font-size: 15px; color: var(--success);">⬇️ استرجاع البيانات من السحابة</p>
+                        <small style="color:#7f8c8d; display:block; margin-top:5px;">(سيتم استبدال البيانات المحلية)</small>
+                    </div>
+
+                    <div class="card" onclick="cloudLogout()">
+                        <h3>خروج</h3>
+                        <p style="font-size: 15px; color: var(--danger);">🚪 تسجيل الخروج</p>
+                    </div>
+                </div>
+                
+                <p id="cloudStatus" style="text-align: center; margin-top: 15px; font-weight: bold;"></p>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="resetSystemModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header" style="border-bottom: none;">
+                <h3 style="color: var(--danger); width: 100%;">⚠️ تحذير خطير جداً</h3>
+            </div>
+            <p style="margin: 15px 0; font-size: 16px; font-weight: bold;">سيتم مسح كافة البيانات من النظام (أصناف، عملاء، سلفيات، تقارير).<br>لا يمكن التراجع عن هذه الخطوة، هل أنت متأكد؟</p>
+            <div class="form-grid">
+                <button class="btn btn-danger" style="padding: 15px; font-size: 16px;" onclick="executeClearAllData()">نعم، احذف كل شيء</button>
+                <button class="btn" style="background:#bdc3c7; color:#333; padding: 15px; font-size: 16px;" onclick="closeModal('resetSystemModal')">إلغاء وتراجع</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="posItemModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>اختر الصنف</h3>
+                <button class="close-modal" onclick="closeModal('posItemModal')">&times;</button>
+            </div>
+            <input type="text" id="posItemSearch" class="search-input" placeholder="🔍 ابحث باسم الصنف..." onkeyup="filterPosItems()">
+            <div id="posItemList" style="max-height: 350px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <div id="posUnitModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>اختر وحدة البيع</h3>
+                <button class="close-modal" onclick="closeModal('posUnitModal')">&times;</button>
+            </div>
+            <div id="posUnitList" class="unit-grid"></div>
+        </div>
+    </div>
+
+    <div id="confirmDeleteProductModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header" style="border-bottom: none;">
+                <h3 style="color: var(--danger); width: 100%;">⚠️ تأكيد حذف الصنف</h3>
+            </div>
+            <p id="deleteProductMsg" style="margin: 15px 0; font-size: 16px;"></p>
+            <input type="hidden" id="deleteProductId">
+            <div class="form-grid">
+                <button class="btn btn-danger" style="padding: 15px; font-size: 16px;" onclick="confirmDeleteProduct()">نعم، احذف</button>
+                <button class="btn" style="background:#bdc3c7; color:#333; padding: 15px; font-size: 16px;" onclick="closeModal('confirmDeleteProductModal')">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="addProductModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>إضافة صنف للمخزون</h3>
+                <button class="close-modal" onclick="closeModal('addProductModal')">&times;</button>
+            </div>
+            <div class="form-grid">
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>اسم الصنف</label>
+                    <input type="text" id="p_name">
+                </div>
+                <div class="form-group">
+                    <label>الوحدة الأم (الصغرى)</label>
+                    <input type="text" id="p_unitSmall" value="حبة" readonly onclick="openUnitSelect('small')" style="cursor: pointer; background: #fdfdfd;">
+                </div>
+                <div class="form-group">
+                    <label>الوحدة الكبرى</label>
+                    <input type="text" id="p_unitBig" value="كرتون" readonly onclick="openUnitSelect('big')" style="cursor: pointer; background: #fdfdfd;">
+                </div>
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>معامل التحويل (<span id="lbl_convert">الكرتون كم حبة؟</span>)</label>
+                    <input type="number" id="p_convert" value="12" min="1" oninput="calcPrices('buy_big')">
+                </div>
+                
+                <div class="form-group" style="background: #eef2f5; padding: 15px; border-radius: 8px;">
+                    <label style="color: var(--primary);">تكلفة شراء (<span class="lbl_big">كرتون</span>)</label>
+                    <input type="number" id="p_buy_big" oninput="calcPrices('buy_big')" value="0" style="background:white;">
+                </div>
+                <div class="form-group" style="background: #eef2f5; padding: 15px; border-radius: 8px;">
+                    <label style="color: var(--primary);">تكلفة شراء (<span class="lbl_small">حبة</span>)</label>
+                    <input type="number" id="p_buy_small" oninput="calcPrices('buy_small')" value="0" style="background:white;">
+                </div>
+                <div class="form-group" style="background: #fdf5e6; padding: 15px; border-radius: 8px;">
+                    <label style="color: var(--accent);">سعر بيع (<span class="lbl_big">كرتون</span>)</label>
+                    <input type="number" id="p_sell_big" value="0" style="background:white;">
+                </div>
+                <div class="form-group" style="background: #fdf5e6; padding: 15px; border-radius: 8px;">
+                    <label style="color: var(--accent);">سعر بيع (<span class="lbl_small">حبة</span>)</label>
+                    <input type="number" id="p_sell_small" value="0" style="background:white;">
+                </div>
+
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>الكمية الافتتاحية (بالوحدة الكبرى)</label>
+                    <input type="number" id="p_stock" value="0">
+                </div>
+            </div>
+            <button class="btn btn-success btn-full" onclick="saveProduct()">حفظ الصنف</button>
+        </div>
+    </div>
+
+    <div id="unitSelectModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>اختر الوحدة</h3>
+                <button class="close-modal" onclick="closeModal('unitSelectModal')">&times;</button>
+            </div>
+            <input type="hidden" id="activeUnitTarget">
+            <div class="unit-grid">
+                <div class="unit-btn" onclick="selectUnit('حبة')">حبة</div>
+                <div class="unit-btn" onclick="selectUnit('قطعة')">قطعة</div>
+                <div class="unit-btn" onclick="selectUnit('درزن')">درزن</div>
+                <div class="unit-btn" onclick="selectUnit('كرتون')">كرتون</div>
+                <div class="unit-btn" onclick="selectUnit('كيس')">كيس</div>
+                <div class="unit-btn" onclick="selectUnit('قارورة')">قارورة</div>
+                <div class="unit-btn" onclick="selectUnit('باكت')">باكت</div>
+                <div class="unit-btn" onclick="selectUnit('كيلو')">كيلو</div>
+                <div class="unit-btn" onclick="selectUnit('لتر')">لتر</div>
+                <div class="unit-btn" onclick="selectUnit('عروسة')">عروسة</div>
+                <div class="unit-btn" onclick="selectUnit('علبة')">علبة</div>
+                <div class="unit-btn" onclick="selectUnit('شريط')">شريط</div>
+                <div class="unit-btn" onclick="selectUnit('جالون')">جالون</div>
+                <div class="unit-btn" onclick="selectUnit('متر')">متر</div>
+                <div class="unit-btn" onclick="selectUnit('جرام')">جرام</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="restockModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>توريد شحنة وتحديث الأسعار</h3>
+                <button class="close-modal" onclick="closeModal('restockModal')">&times;</button>
+            </div>
+            <input type="hidden" id="restock_id">
+            <p style="margin-bottom: 15px; color: var(--primary); font-weight: bold; background: #f8f9fa; padding: 10px; border-radius: 5px;" id="restock_info"></p>
+            
+            <div class="form-group">
+                <label>الكمية المضافة (بالوحدة الكبرى)</label>
+                <input type="number" id="restock_qty" value="1" min="1">
+            </div>
+            <div class="form-group" style="background: #eef2f5; padding: 15px; border-radius: 8px;">
+                <label>سعر الشراء الجديد (للوحدة الكبرى)</label>
+                <input type="number" id="restock_buy_price" step="0.01" style="background:white;">
+            </div>
+            <div class="form-group" style="background: #fdf5e6; padding: 15px; border-radius: 8px;">
+                <label>سعر البيع الجديد (للوحدة الكبرى)</label>
+                <input type="number" id="restock_sell_price" step="0.01" style="background:white;">
+            </div>
+            
+            <button class="btn btn-warning btn-full" onclick="processRestock()">حفظ وإضافة للمخزون</button>
+        </div>
+    </div>
+
+    <div id="checkoutModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>إتمام الفاتورة</h3>
+                <button class="close-modal" onclick="closeModal('checkoutModal')">&times;</button>
+            </div>
+            <h2 style="text-align: center; color: var(--success); margin-bottom: 15px; font-size: 30px;" id="chkTotal">0</h2>
+            
+            <div class="form-group" style="margin-bottom: 25px;">
+                <label style="color: #7f8c8d;">اسم العميل (يظهر في الفاتورة النقدية - اختياري)</label>
+                <input type="text" id="optionalCashName" placeholder="نقد">
+            </div>
+
+            <div class="form-grid">
+                <button class="btn btn-success" style="padding: 20px; font-size: 18px;" onclick="executeSale('cash')">💵 بيع نـقـد</button>
+                <button class="btn btn-danger" style="padding: 20px; font-size: 18px;" onclick="openModal('selectCustomerModal'); closeModal('checkoutModal')">📝 بيع سـلـف (آجل)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="selectCustomerModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>إتمام عملية السلف</h3>
+                <button class="close-modal" onclick="closeModal('selectCustomerModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>ابحث واختر العميل</label>
+                <input type="text" id="customerSearchInput" class="search-input" placeholder="🔍 ابحث باسم العميل..." onkeyup="renderCustomerList()">
+                <div id="customerSelectionGrid" class="unit-grid" style="max-height: 200px; overflow-y: auto;"></div>
+                <input type="hidden" id="selectedCreditCustomerId">
+            </div>
+            <div class="form-group" id="creditAmountGroup" style="display:none; margin-top:15px; background: #fff5f5; padding: 15px; border-radius: 8px;">
+                <label>العميل المحدد: <span id="selectedCustomerNameText" style="color:var(--accent); font-weight:bold; font-size: 16px;"></span></label>
+                <label style="margin-top:10px;">مبلغ السلف (الآجل)</label>
+                <input type="number" id="creditAmount" min="0" style="padding: 15px; font-size: 18px; font-weight: bold; color: var(--danger); text-align: center;">
+                <button class="btn btn-danger btn-full" onclick="executeSale('credit')">تأكيد السلف وإنهاء البيع</button>
+            </div>
+            <hr style="margin: 20px 0; border: none; border-top: 1px dashed #ccc;">
+            <button class="btn" style="width: 100%; background-color:#34495e; color:white;" onclick="openModal('addCustomerModal')">➕ إضافة عميل جديد</button>
+        </div>
+    </div>
+
+    <div id="addCustomerModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>إضافة عميل جديد</h3>
+                <button class="close-modal" onclick="closeModal('addCustomerModal')">&times;</button>
+            </div>
+            <div class="form-group"><label>اسم العميل</label><input type="text" id="c_name"></div>
+            <div class="form-group"><label>رقم الهاتف</label><input type="text" id="c_phone"></div>
+            <button class="btn btn-success btn-full" onclick="saveCustomer()">حفظ العميل</button>
+        </div>
+    </div>
+
+    <div id="debtErrorModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 350px; text-align: center;">
+            <div class="modal-header" style="border-bottom: none; padding-bottom: 0;">
+                <h3 style="color: var(--danger); width: 100%;">⚠️ تنبيه</h3>
+            </div>
+            <p style="margin: 20px 0; font-size: 16px;">عفواً، لا يمكن حذف عميل لديه ديون غير مسددة!</p>
+            <button class="btn btn-danger btn-full" onclick="closeModal('debtErrorModal')">حسناً</button>
+        </div>
+    </div>
+
+    <div id="payDebtModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>تسديد دفعة من الحساب</h3>
+                <button class="close-modal" onclick="closeModal('payDebtModal')">&times;</button>
+            </div>
+            <input type="hidden" id="pay_customerId">
+            <p style="margin-bottom: 10px; font-size: 15px;">العميل: <strong id="pay_cName" style="color:var(--primary)"></strong></p>
+            <p style="margin-bottom: 20px; color: var(--danger); font-size: 16px;">إجمالي المديونية: <strong id="pay_cDebt"></strong></p>
+            <div class="form-group" style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                <label>المبلغ المراد تسديده</label>
+                <input type="number" id="pay_amount" value="0" min="1" style="font-size: 18px; font-weight: bold; text-align: center;">
+            </div>
+            <button class="btn btn-success btn-full" onclick="processPayment()">تسديد</button>
+        </div>
+    </div>
+
+    <div id="statementModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>كشف حساب وفاتورة العميل</h3>
+                <button class="close-modal" onclick="closeModal('statementModal')">&times;</button>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <p style="margin-bottom: 8px;">العميل: <strong id="stmt_cName"></strong></p>
+                    <p>إجمالي المديونية الحالية: <strong id="stmt_cDebt" style="color:var(--danger); font-size:16px;"></strong></p>
+                </div>
+                <button class="btn btn-primary" id="btnPrintStatement" style="font-size: 14px; background-color: #34495e;">🖨️ طباعة / مشاركة الكشف</button>
+            </div>
+            
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>السلعة / الفاتورة</th>
+                            <th>قيمة السلف</th>
+                            <th>المتبقي (غير مسدد)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="statementTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="reportFilterModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>تصفية التقارير</h3>
+                <button class="close-modal" onclick="closeModal('reportFilterModal')">&times;</button>
+            </div>
+            <div class="form-group"><label>من تاريخ</label><input type="date" id="filter_from"></div>
+            <div class="form-group"><label>إلى تاريخ</label><input type="date" id="filter_to"></div>
+            <button class="btn btn-primary btn-full" onclick="applyReportFilter()">عرض التقارير</button>
+        </div>
+    </div>
+
+    <div id="successModal" class="modal-overlay" style="z-index: 9999;">
+        <div class="modal-content" style="max-width: 300px; text-align: center; background: rgba(255,255,255,0.95);">
+            <div style="font-size: 60px; color: var(--success); margin-bottom: 15px;">✔️</div>
+            <h2 style="color: var(--success);">تمت العملية بنجاح</h2>
+        </div>
+    </div>
+
+    <div id="invoiceContainer" class="invoice-overlay">
+        <div class="invoice-card" id="invoiceCard">
+            <div class="no-print" style="display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">
+                <button class="btn btn-success" style="flex:1; font-size:15px;" onclick="triggerPrint()">🖨️ طباعة</button>
+                <button class="btn btn-primary" style="flex:1; background:#2980b9; font-size:15px;" onclick="shareInvoiceImage()">📤 مشاركة</button>
+                <button class="btn btn-danger" style="flex:1; font-size:15px;" onclick="closeInvoice()">❌ رجوع</button>
+            </div>
+            
+            <div id="receipt-content" style="background: white; padding: 10px; min-height: 200px;"></div>
+        </div>
+    </div>
+<div id="cloudLoadingModal" class="modal-overlay" style="z-index: 2000;">
+    <div class="modal-content" style="max-width: 300px; text-align: center; padding: 40px 20px;">
+        <div class="loader-spinner" style="width: 50px; height: 50px; border-width: 5px; margin-bottom: 20px;"></div>
+        <h3 id="cloudLoadingText" style="color: var(--primary); margin-bottom: 10px;">جاري الاتصال...</h3>
+        <p style="font-size: 13px; color: #7f8c8d;">يرجى عدم إغلاق الصفحة</p>
+    </div>
+</div>
+
+<div id="cloudAlertModal" class="modal-overlay" style="z-index: 2100;">
+    <div class="modal-content" style="max-width: 350px; text-align: center;">
+        <div class="modal-header" style="border: none; padding-bottom: 0;">
+            <h3 id="cloudAlertTitle" style="width: 100%; color: var(--accent);">تنبيه</h3>
+        </div>
+        <div style="margin: 15px 0;">
+            <p id="cloudAlertMsg" style="font-size: 16px; line-height: 1.6; color: #333;"></p>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="closeModal('cloudAlertModal')">حسناً</button>
+    </div>
+</div>
+
+<div id="cloudConfirmModal" class="modal-overlay" style="z-index: 2100;">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header" style="border: none;">
+            <h3 style="color: var(--danger);">⚠️ تأكيد إجراء حساس</h3>
+        </div>
+        <p id="cloudConfirmMsg" style="margin-bottom: 25px; font-size: 15px; line-height: 1.6; color: #555;"></p>
+        
+        <div class="form-grid">
+            <button id="btnConfirmYes" class="btn btn-danger" style="padding: 12px;">نعم، نفذ الإجراء</button>
+            <button class="btn" style="background:#bdc3c7; color:#333;" onclick="closeModal('cloudConfirmModal')">إلغاء</button>
+        </div>
+    </div>
+</div>
+    <script src="js/utils.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/products.js"></script>
+    <script src="js/customers.js"></script>
+    <script src="js/pos.js"></script>
+    <script src="js/reports.js"></script>
+    <script src="js/cloud.js"></script>
+</body>
+</html>
