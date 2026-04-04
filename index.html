@@ -5,10 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>نظام الشرق لإدارة المخزون والمبيعات</title>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body oncontextmenu="return false;">
+	
+	<div id="loginScreen" class="login-overlay active">
+        <div class="login-box">
+            <div class="login-header">
+                <h1 style="color: var(--primary); margin-bottom: 5px;">🧾 نظام الشرق</h1>
+                <p style="color: #7f8c8d; font-family: monospace; font-size: 16px; margin-bottom: 15px;">Accounting System</p>
+                <div style="font-size: 60px; margin-bottom: 10px; color: var(--secondary);">👤</div>
+            </div>
+            
+            <div class="form-group" style="position: relative;">
+                <span style="position: absolute; right: 15px; top: 40px; color: #95a5a6; font-size: 18px;">👤</span>
+                <label>اسم المستخدم</label>
+                <input type="text" id="login_username" placeholder="أدخل اسم الدخول" style="padding-right: 45px; font-size: 16px;" onkeypress="handleLoginEnter(event)">
+            </div>
+            
+            <div class="form-group" style="position: relative;">
+                <span style="position: absolute; right: 15px; top: 40px; color: #95a5a6; font-size: 18px;">🔒</span>
+                <label>كلمة المرور</label>
+                <input type="password" id="login_password" placeholder="أدخل كلمة المرور" style="padding-right: 45px; font-size: 16px;" onkeypress="handleLoginEnter(event)">
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 8px; color: #555; font-weight: bold;">
+                    <input type="checkbox" id="login_remember" checked style="width: 20px; height: 20px; margin: 0;"> تذكرني
+                </label>
+            </div>
+            
+            <button class="btn btn-primary btn-full" style="font-size: 20px; padding: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);" onclick="performLogin()">تسجيل الدخول</button>
+        </div>
+    </div>
 
     <div class="top-nav">
         <h2>نظام الشرق</h2>
@@ -18,21 +47,108 @@
     <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
     <div class="sidebar" id="sidebar">
-        <h2>نظام الشرق</h2>
-        <button class="nav-btn active" onclick="showScreen('dashboardScreen', this)">📊 لوحة التحكم</button>
-        <button class="nav-btn" onclick="showScreen('salesScreen', this)">🛒 الكاشير (POS)</button>
-        <button class="nav-btn" onclick="showScreen('inventoryScreen', this)">📦 المخزون والأصناف</button>
+        <h2 class="store-name-display">نظام الشرق</h2>
+        
+        <div class="nav-category">الرئيسية</div>
+        <button class="nav-btn active" onclick="showScreen('homeScreen', this)">📊 لوحة التحكم</button>
+        <button class="nav-btn" onclick="showScreen('dashboardScreen', this)">👁️‍🗨️ نظرة عامة</button>
+        <button class="nav-btn" onclick="showScreen('salesScreen', this)" style="color: var(--accent); font-weight: bold;">🛒 الكاشير (POS)</button>
+        
+        <div class="nav-category">الحسابات والمالية</div>
+        <button class="nav-btn" onclick="showScreen('treasuryScreen', this)">💰 الصندوق والمصروفات</button>
         <button class="nav-btn" onclick="showScreen('customersScreen', this)">👥 العملاء والديون</button>
+        
+        <div class="nav-category">المخزون والمشتريات</div>
+        <button class="nav-btn" onclick="showScreen('inventoryScreen', this)">📦 المخزون والأصناف</button>
+        <button class="nav-btn" onclick="showScreen('suppliersScreen', this)">🏢 إدارة الموردين</button>
+       <button class="nav-btn" onclick="showScreen('purchasesScreen', this)">🧾 فواتير المشتريات</button>
+        
+        <div class="nav-category">التقارير والتحليلات</div>
         <button class="nav-btn" onclick="showScreen('reportsScreen', this)">📈 التقارير</button>
         <button class="nav-btn" onclick="showScreen('analyticsScreen', this)">🧠 تحليلات وذكاء المتجر</button>
-        <button class="nav-btn" onclick="showScreen('cloudScreen', this); initCloudSystem()">☁️ النسخ الاحتياطي (أونلاين)</button>
+        
+        <div class="nav-category">إدارة النظام</div>
+        <button class="nav-btn" onclick="showScreen('localBackupScreen', this)">💾 النسخ الاحتياطي والأمان</button>
+        <button class="nav-btn" onclick="showScreen('cloudScreen', this); initCloudSystem()">☁️ المزامنة السحابية</button>
+        <button class="nav-btn" onclick="showScreen('settingsScreen', this)">⚙️ الإعدادات</button>
+        <button class="nav-btn" onclick="showScreen('usersScreen', this)">👤 إدارة المستخدمين</button>
+        <button class="nav-btn" onclick="performLogout()" style="color: var(--danger); margin-top: 20px; margin-bottom: 20px;">🚪 تسجيل الخروج</button>
     </div>
 
     <div class="main-content">
+    
+        <div id="homeScreen" class="screen active">
+    <div class="dashboard-container">
         
-        <div id="dashboardScreen" class="screen active">
+        <div class="dash-header">
+            <div class="dash-welcome">
+                <h2 style="color: var(--primary);">مركز العمليات والإحصائيات 🚀</h2>
+                <p id="current_date_display" style="color: #7f8c8d; font-size: 14px; margin-top: 5px;"></p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" id="btnPrivacyToggle" onclick="togglePrivacyMode()" style="background: #34495e; color: white;" title="إخفاء/إظهار الأرقام الحساسة">
+                    👁️ إخفاء الأرقام
+                </button>
+                <button class="btn btn-primary" onclick="openOverviewPopup()">
+                    📊 تقارير مفصلة
+                </button>
+            </div>
+        </div>
+
+        <div class="system-status-bar" id="systemStatusBar"></div>
+        <div class="ticker-wrap"><div class="ticker-text" id="dashboardTicker"><span>جاري تحميل التنبيهات...</span></div></div>
+
+        <h3 class="section-title">💰 المؤشرات المالية لليوم</h3>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">إجمالي مبيعات اليوم</div>
+                <div class="stat-value sensitive-data" id="dash_cash_sales">0</div>
+            </div>
+            <div class="stat-card" style="border-right-color: var(--success);">
+                <div class="stat-title">صافي أرباح اليوم (التقديرية)</div>
+                <div class="stat-value sensitive-data" id="dash_today_profit" style="color: var(--success);">0</div>
+            </div>
+            <div class="stat-card" style="border-right-color: var(--accent);">
+                <div class="stat-title">السيولة النقدية (الصندوق الرئيسي)</div>
+                <div class="stat-value sensitive-data" id="dash_safe_balance" style="color: var(--accent);">0</div>
+            </div>
+            <div class="stat-card" style="border-right-color: var(--danger);">
+                <div class="stat-title">إجمالي الديون في السوق</div>
+                <div class="stat-value sensitive-data" id="dash_total_debts" style="color: var(--danger);">0</div>
+            </div>
+        </div>
+
+        <div class="dashboard-charts-container">
+            <div class="chart-card">
+                <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 16px;">📈 حركة المبيعات والأرباح (آخر 7 أيام)</h3>
+                <div class="chart-wrapper sensitive-data"><canvas id="weeklySalesChart"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 16px;">📊 ملخص سيولة اليوم (الصندوق)</h3>
+                <div class="chart-wrapper sensitive-data"><canvas id="todayTreasuryChart"></canvas></div>
+            </div>
+        </div>
+
+        <h3 class="section-title">⚡ إجراءات سريعة</h3>
+        <div class="quick-actions-grid">
+            <button class="action-btn pos-btn" onclick="goToCashier()"><span class="icon">🛒</span><span>فاتورة بيع</span></button>
+            <button class="action-btn purchase-btn" onclick="showScreen('purchasesScreen')"><span class="icon">📦</span><span>فاتورة شراء</span></button>
+            <button class="action-btn income-btn" onclick="openTransactionModal('income')"><span class="icon">💰</span><span>سند قبض</span></button>
+            <button class="action-btn expense-btn" onclick="openTransactionModal('expense')"><span class="icon">💸</span><span>سند صرف</span></button>
+        </div>
+
+        <h3 class="section-title">⏱️ آخر الحركات المالية</h3>
+        <div class="recent-activity-list sensitive-data" id="dash_recent_activity"></div>
+        
+    </div>
+</div>
+        <div id="dashboardScreen" class="screen">
             <h2>نظرة عامة</h2><br>
             <div class="cards">
+                <div class="card" style="border-top: 4px solid var(--success);">
+                    <h3>رصيد الصندوق (الخزينة)</h3>
+                    <p id="dashBoxBalance" style="color: var(--success);" dir="ltr">0</p>
+                </div>
                 <div class="card" style="border-top: 4px solid var(--primary);">
                     <h3>رأس المال (تكلفة المخزون)</h3>
                     <p id="dashCapital" dir="ltr">0</p>
@@ -41,6 +157,10 @@
                     <h3>إجمالي المبيعات</h3>
                     <p id="dashSales" style="color: var(--accent);" dir="ltr">0</p>
                 </div>
+                <div class="card" style="border-top: 4px solid var(--danger);">
+    <h3>إجمالي المشتريات</h3>
+    <h2 id="dashPurchases" style="color: var(--danger);">0</h2>
+</div>
                 <div class="card" style="border-top: 4px solid var(--success);">
                     <h3>إجمالي الأرباح</h3>
                     <p id="dashProfit" style="color: var(--success);" dir="ltr">0</p>
@@ -53,6 +173,51 @@
                     <h3>الأصناف المتوفرة حالياً</h3>
                     <p id="dashItemsCount" style="color: #9b59b6;">0</p>
                 </div>
+            </div>
+        </div>
+
+        <div id="treasuryScreen" class="screen">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                <h2>إدارة الخزائن والورديات</h2>
+                <div>
+                    <button class="btn btn-warning" onclick="openShiftModal()">🕒 إدارة الوردية</button>
+                    <button class="btn btn-primary" onclick="openTransferModal()">↔️ تحويل بين الخزائن</button>
+                    <button class="btn btn-success" onclick="openSafeModal()">➕ خزانة جديدة</button>
+                </div>
+            </div>
+
+            <div id="activeShiftNotice" style="background: #e8f8f5; border: 1px solid #1abc9c; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none;">
+                <h3 style="color: #16a085; margin-bottom: 5px;">🟢 وردية مفتوحة حالياً</h3>
+                <p id="activeShiftDetails" style="font-size: 14px; color: #333;"></p>
+            </div>
+
+            <h3 style="margin-bottom: 10px; color: var(--primary);">🏦 الخزائن والصناديق</h3>
+            <div class="cards" id="safesGrid" style="margin-bottom: 20px;">
+                </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; margin-top: 30px;">
+                <h3 style="color: var(--primary);">دفتر الأستاذ (سجل الحركات للوردية والخزانة)</h3>
+                <div>
+                    <button class="btn btn-success" onclick="openTransactionModal('income')">➕ سند قبض</button>
+                    <button class="btn btn-danger" onclick="openTransactionModal('expense')">➖ سند صرف</button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>الخزانة / الوردية</th>
+                            <th>النوع</th>
+                            <th>البيان</th>
+                            <th>وارد</th>
+                            <th>منصرف</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="treasuryTable"></tbody>
+                </table>
             </div>
         </div>
 
@@ -78,42 +243,52 @@
         </div>
 
         <div id="salesScreen" class="screen">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <h2>نقطة البيع السريعة</h2>
-                <label style="background: #fff; padding: 8px 15px; border-radius: 6px; cursor: pointer; border: 1px solid #ddd; font-weight: bold; color: var(--primary);">
-                    <input type="checkbox" id="autoPrint" checked> 🖨️ طباعة تلقائية
-                </label>
-            </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h2>نقطة البيع السريعة (POS)</h2>
+        <label style="background: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; border: 1px solid #ddd; font-weight: bold; color: var(--primary); font-size: 14px;">
+            <input type="checkbox" id="autoPrint" checked> 🖨️ طباعة تلقائية
+        </label>
+    </div>
 
-            <div class="pos-layout">
-                <div class="pos-products-area">
-                    <input type="text" id="fastSearch" class="search-input" style="margin-bottom: 10px;" placeholder="🔍 ابحث بالاسم أو الباركود السريع..." onkeyup="renderFastProducts()">
-                    <div class="pos-products-grid" id="fastProductGrid">
-                        </div>
+    <div class="pos-layout">
+        <div class="pos-products-area">
+            <div class="search-bar-container">
+                <input type="text" id="fastSearch" class="search-input modern-search" placeholder="🔍 ابحث بالاسم أو الباركود..." onkeyup="renderFastProducts()">
+                <button class="btn btn-primary camera-btn" onclick="openCameraScanner('fastSearch', true)" title="مسح بالكاميرا">📷</button>
+            </div>
+            <div class="pos-products-grid" id="fastProductGrid">
+                </div>
+        </div>
+        
+        <div class="pos-cart-area">
+            <div class="cart-header">
+                <span>🛒 الفاتورة الحالية</span>
+                <span id="cartItemCount" class="badge-small" style="background: var(--accent); font-size: 14px;">0</span>
+            </div>
+            
+            <div class="cart-items" id="fastCartItems">
+                <p style="text-align:center; padding: 20px; color:#7f8c8d; font-size: 14px;">السلة فارغة، اضغط على الأصناف لإضافتها</p>
+            </div>
+            
+            <div class="cart-bottom-section">
+                <div class="cart-summary modern-summary">
+                    الإجمالي: <span id="fastGrandTotal">0</span>
                 </div>
                 
-                <div class="pos-cart-area">
-                    <div class="cart-header">🛒 الفاتورة الحالية</div>
-                    <div class="cart-items" id="fastCartItems">
-                        <p style="text-align:center; padding: 20px; color:#7f8c8d; font-size: 14px;">السلة فارغة، اضغط على الأصناف لإضافتها</p>
-                    </div>
+                <div class="cart-actions modern-actions">
+                    <input type="text" id="optionalCashName" placeholder="👤 اسم العميل (اختياري للفاتورة النقدية)" class="search-input compact-input">
                     
-                    <div class="cart-summary">
-                        الإجمالي: <span id="fastGrandTotal">0</span>
-                    </div>
-                    
-                    <div class="cart-actions">
-                        <input type="text" id="optionalCashName" placeholder="اسم العميل (يظهر في الفاتورة النقدية - اختياري)" class="search-input" style="margin-bottom: 5px; padding: 10px;">
-                        
-                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
-                            <button class="btn btn-success" style="font-size: 18px; padding: 15px;" onclick="fastCashCheckout()">💵 دفع كـاش</button>
-                            <button class="btn btn-warning" onclick="clearCart()">🗑️ تفريغ</button>
-                        </div>
-                        <button class="btn btn-primary btn-full" style="background-color: var(--secondary); margin-top: 10px;" onclick="startCheckoutCredit()">📝 دفع آجل (سلف)</button>
+                    <div class="action-buttons-grid">
+                        <button class="btn btn-success action-btn-pos" onclick="fastCashCheckout()">💵 كاش</button>
+                        <button class="btn action-btn-pos btn-purple" onclick="openPayFromBalanceModal()">💳 من الرصيد</button>
+                        <button class="btn btn-primary action-btn-pos" onclick="startCheckoutCredit()">📝 آجل (سلف)</button>
+                        <button class="btn btn-danger action-btn-pos" onclick="clearCart()">🗑️ تفريغ</button>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
         <div id="customersScreen" class="screen">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -123,13 +298,14 @@
             <div class="table-responsive">
                 <table>
                     <thead>
-                        <tr>
-                            <th>اسم العميل</th>
-                            <th>رقم الهاتف</th>
-                            <th>إجمالي المديونية</th>
-                            <th>إجراءات</th>
-                        </tr>
-                    </thead>
+    <tr>
+        <th>اسم العميل</th>
+        <th>رقم الهاتف</th>
+        <th>إجمالي المديونية</th>
+        <th>الرصيد المودع</th>
+        <th>إجراءات</th>
+    </tr>
+</thead>
                     <tbody id="customersTable"></tbody>
                 </table>
             </div>
@@ -172,7 +348,7 @@
             <div class="cards">
                 <div class="card" style="grid-column: 1 / -1; text-align: right;">
                     <h3>📈 الحركة اليومية للمبيعات</h3>
-                    <div id="dailySalesChart" style="margin-top: 15px;"></div>
+                    <div id="dailySalesChart" style="margin-top: 15px; max-height: 400px; overflow-y: auto;"></div>
                 </div>
             </div>
 
@@ -187,8 +363,128 @@
                     <p style="font-size: 12px; color: #7f8c8d; margin-bottom: 15px;">يعتمد على نقص المخزون مقارنة بسرعة بيع الصنف.</p>
                     <div id="smartRestockList"></div>
                 </div>
+                <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #eee; border-top: 4px solid #e67e22; grid-column: 1 / -1;">
+                    <h3 style="color: #d35400; margin-bottom: 15px;">⏳ تنبيهات الصلاحية (ذكاء اصطناعي)</h3>
+                    <p style="font-size: 12px; color: #7f8c8d; margin-bottom: 15px;">يقوم النظام بفحص دفعات التوريد وتنبيهك للأصناف التي تنتهي خلال 30 يوماً.</p>
+                    <div id="expiryAlertsList"></div>
+                </div>
             </div>
         </div>
+
+        <div id="localBackupScreen" class="screen">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                <h2>💾 إدارة النسخ الاحتياطي والأمان</h2>
+                <div>
+                    <button class="btn btn-primary" onclick="createBackup('Manual')">➕ إنشاء نسخة احتياطية الآن (Full Backup)</button>
+                </div>
+            </div>
+
+            <div class="cards" style="grid-template-columns: 2fr 1fr; margin-bottom: 20px;">
+                <div class="card" style="text-align: right; border-top: 4px solid var(--accent);">
+                    <h3 style="color:var(--primary); margin-bottom: 15px;">⚙️ إعدادات الأمان والجدولة الذكية</h3>
+                    
+                    <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; background:#f8f9fa; padding:10px; border-radius:6px; border:1px solid #ddd;">
+                            <input type="checkbox" id="chk_daily_backup" checked style="width:18px; height:18px; accent-color:var(--accent);">
+                            <span>نسخ يومي كامل (Full Backup)</span>
+                        </label>
+                        
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; background:#f8f9fa; padding:10px; border-radius:6px; border:1px solid #ddd;">
+                            <input type="checkbox" id="chk_hourly_backup" checked style="width:18px; height:18px; accent-color:var(--accent);">
+                            <span>نسخ تزايدي/ساعي (Hourly Snapshot)</span>
+                        </label>
+
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; background:#e8f8f5; padding:10px; border-radius:6px; border:1px solid #1abc9c;">
+                            <input type="checkbox" id="chk_encrypt_backup" checked style="width:18px; height:18px; accent-color:#1abc9c;">
+                            <span>تشفير النسخ (AES/XOR Simulation)</span>
+                        </label>
+
+                        <div style="background:#fdfaf6; padding:10px; border-radius:6px; border:1px solid #e67e22; display:flex; align-items:center; gap:10px;">
+                            <span>الاحتفاظ بالنسخ لمدة:</span>
+                            <input type="number" id="set_retention_days" value="7" min="1" max="30" style="width:60px; padding:5px; border:1px solid #ccc; border-radius:4px;">
+                            <span>أيام</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-success" style="margin-top:15px;" onclick="saveBackupSettings()">💾 حفظ إعدادات الجدولة</button>
+                </div>
+
+                <div class="card" style="text-align: right; border-top: 4px solid var(--warning);">
+                    <h3 style="color:#d35400; margin-bottom: 10px;">📂 استيراد نسخة خارجية (.bak)</h3>
+                    <p style="font-size:12px; color:#7f8c8d; margin-bottom:10px;">لاستعادة البيانات من فلاش (USB) أو جهاز آخر.</p>
+                    <input type="file" id="import_backup_file" accept=".bak,.json" style="width:100%; padding:8px; border:1px solid #ddd; margin-bottom:10px; background:#fff; border-radius:4px;">
+                    <button class="btn btn-warning btn-full" onclick="importBackupFromFile()">استيراد للقائمة</button>
+                </div>
+            </div>
+
+            <h3 style="margin-bottom: 10px; color: var(--primary);">🗄️ الأرشيف والنسخ المتوفرة (محفوظة في IndexedDB)</h3>
+            <div class="table-responsive" style="margin-bottom: 20px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>التاريخ والوقت</th>
+                            <th>اسم النسخة</th>
+                            <th>النوع</th>
+                            <th>الحجم (مشفر)</th>
+                            <th>الإجراءات (Restore / Export)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="localBackupsTable"></tbody>
+                </table>
+            </div>
+
+            <h3 style="margin-bottom: 10px; color: #7f8c8d; font-size:14px;">📋 سجل عمليات النسخ (Backup Logs)</h3>
+            <div class="table-responsive" style="max-height: 200px; overflow-y:auto; background:#fbfcfc;">
+                <table>
+                    <thead>
+                        <tr><th>الوقت</th><th>العملية</th><th>حجم البيانات</th><th>الحالة والتحقق</th></tr>
+                    </thead>
+                    <tbody id="backupLogsTable"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div id="suppliersScreen" class="screen">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h2>🏢 إدارة الموردين</h2>
+        <button class="btn btn-success" onclick="openModal('addSupplierModal')">➕ إضافة مورد</button>
+    </div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>اسم المورد</th>
+                    <th>رقم الهاتف</th>
+                    <th>الرصيد (مطلوب للدفع)</th>
+                    <th>الحد الائتماني</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="suppliersTable"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="purchasesScreen" class="screen">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h2>🧾 فواتير المشتريات</h2>
+        <button class="btn btn-primary" onclick="openAddPurchaseModal()">➕ فاتورة شراء جديدة</button>
+    </div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>رقم الفاتورة</th>
+                    <th>التاريخ</th>
+                    <th>المورد</th>
+                    <th>الدفع</th>
+                    <th>الإجمالي</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="purchasesTable"></tbody>
+        </table>
+    </div>
+</div>
 
         <div id="cloudScreen" class="screen">
             <h2>☁️ الملف الشخصي والنسخ الاحتياطي</h2>
@@ -245,7 +541,80 @@
                 <p id="cloudStatus" style="text-align: center; margin-top: 15px; font-weight: bold;"></p>
             </div>
         </div>
+        
+        <div id="settingsScreen" class="screen">
+        </div>
 
+        <div id="usersScreen" class="screen">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                <h2>👤 إدارة المستخدمين والصلاحيات</h2>
+                <div>
+                    <button class="btn btn-warning" onclick="showActivityLogs()">📋 سجل النشاط</button>
+                    <button class="btn btn-success" onclick="openUserModal()">➕ إضافة مستخدم</button>
+                </div>
+            </div>
+            
+            <div class="cards" style="grid-template-columns: 2fr 1fr;">
+                <div class="card" style="display: flex; gap: 10px; align-items: center;">
+                    <input type="text" id="userSearch" class="search-input" style="margin:0;" placeholder="🔍 البحث عن مستخدم..." onkeyup="renderUsers()">
+                    <select id="userRoleFilter" class="search-input" style="margin:0; width: 200px;" onchange="renderUsers()">
+                        <option value="all">الكل</option>
+                        <option value="admin">مدير</option>
+                        <option value="cashier">كاشير</option>
+                        <option value="employee">موظف</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>اسم الدخول</th>
+                            <th>الاسم الكامل</th>
+                            <th>الدور</th>
+                            <th>الحالة</th>
+                            <th>قيود الجهاز</th>
+                            <th>آخر دخول</th>
+                            <th>العمليات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="cameraScannerModal" class="modal-overlay" style="z-index: 99999;">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header">
+                <h3>📷 مسح الباركود بالكاميرا</h3>
+                <button class="close-modal" onclick="closeCameraScanner()">&times;</button>
+            </div>
+            <p style="font-size: 12px; color: #7f8c8d; margin-bottom: 10px;">قم بتوجيه الكاميرا نحو الباركود</p>
+            <div id="qr-reader" style="width:100%; margin-bottom: 15px; border-radius: 8px; overflow: hidden; border: 2px solid var(--primary);"></div>
+            <button class="btn btn-danger btn-full" onclick="closeCameraScanner()">إغلاق / إلغاء</button>
+        </div>
+    </div>
+
+    <div id="transactionModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 id="transModalTitle">إضافة حركة صندوق</h3>
+                <button class="close-modal" onclick="closeModal('transactionModal')">&times;</button>
+            </div>
+            <input type="hidden" id="trans_type">
+            <div class="form-group">
+                <label>المبلغ</label>
+                <input type="number" id="trans_amount" min="1" step="0.01" style="font-size: 20px; font-weight: bold; text-align: center; color: var(--primary);">
+            </div>
+            <div class="form-group">
+                <label>البيان / الوصف (إيجار، رواتب، إيداع شخصي...)</label>
+                <input type="text" id="trans_desc" placeholder="مثال: دفع إيجار المحل شهر 10">
+            </div>
+            <button class="btn btn-full" id="btnSaveTrans" onclick="saveManualTransaction()">حفظ العملية</button>
+        </div>
     </div>
 
     <div id="resetSystemModal" class="modal-overlay">
@@ -307,6 +676,15 @@
                     <label>اسم الصنف</label>
                     <input type="text" id="p_name">
                 </div>
+                
+                <div class="form-group" style="grid-column: 1 / -1; background: #f4f6f9; padding: 10px; border-radius: 8px; border: 1px dashed #bdc3c7;">
+                    <label style="color: var(--primary); font-weight: bold;">📟 رقم الباركود (اختياري)</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="p_barcode" placeholder="امسح الباركود أو أدخله يدوياً" style="font-family: monospace; font-size: 16px; letter-spacing: 1px; direction: ltr; text-align: right; flex: 1;">
+                        <button type="button" class="btn btn-primary" onclick="openCameraScanner('p_barcode', false)" style="padding: 10px 15px; font-size: 18px;" title="مسح بالكاميرا">📷</button>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label>الوحدة الأم (الصغرى)</label>
                     <input type="text" id="p_unitSmall" value="حبة" readonly onclick="openUnitSelect('small')" style="cursor: pointer; background: #fdfdfd;">
@@ -342,6 +720,10 @@
                     <input type="number" id="p_stock" value="0">
                 </div>
             </div>
+            <div class="form-group" style="grid-column: 1 / -1; background: #fff3cd; padding: 15px; border-radius: 8px;">
+                    <label style="color: #856404;">تاريخ الانتهاء (اختياري - لتتبع الصلاحية)</label>
+                    <input type="date" id="p_expiry" style="background:white;">
+            </div>
             <button class="btn btn-success btn-full" onclick="saveProduct()">حفظ الصنف</button>
         </div>
     </div>
@@ -376,6 +758,10 @@
     <div id="restockModal" class="modal-overlay">
         <div class="modal-content" style="max-width: 400px;">
             <div class="modal-header">
+            	<div class="form-group" style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 10px;">
+                <label style="color: #856404;">تاريخ انتهاء هذه الدفعة (اختياري)</label>
+                <input type="date" id="restock_expiry" style="background:white;">
+            </div>
                 <h3>توريد شحنة وتحديث الأسعار</h3>
                 <button class="close-modal" onclick="closeModal('restockModal')">&times;</button>
             </div>
@@ -450,6 +836,12 @@
             </div>
             <div class="form-group"><label>اسم العميل</label><input type="text" id="c_name"></div>
             <div class="form-group"><label>رقم الهاتف</label><input type="text" id="c_phone"></div>
+            <div class="form-group">
+    <label>حد الدين المسموح (اختياري)</label>
+    <input type="number" id="c_credit_limit" placeholder="مثال: 75000">
+    <small style="color: #7f8c8d; font-size: 11px;">اتركه فارغاً لاستخدام الحد الافتراضي (50,000)</small>
+</div>
+<div class="form-group"><label>الرصيد المودع المسبق (اختياري)</label><input type="number" id="c_balance" value="0" min="0"></div>
             <button class="btn btn-success btn-full" onclick="saveCustomer()">حفظ العميل</button>
         </div>
     </div>
@@ -465,21 +857,24 @@
     </div>
 
     <div id="payDebtModal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 400px;">
-            <div class="modal-header">
-                <h3>تسديد دفعة من الحساب</h3>
-                <button class="close-modal" onclick="closeModal('payDebtModal')">&times;</button>
-            </div>
-            <input type="hidden" id="pay_customerId">
-            <p style="margin-bottom: 10px; font-size: 15px;">العميل: <strong id="pay_cName" style="color:var(--primary)"></strong></p>
-            <p style="margin-bottom: 20px; color: var(--danger); font-size: 16px;">إجمالي المديونية: <strong id="pay_cDebt"></strong></p>
-            <div class="form-group" style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
-                <label>المبلغ المراد تسديده</label>
-                <input type="number" id="pay_amount" value="0" min="1" style="font-size: 18px; font-weight: bold; text-align: center;">
-            </div>
-            <button class="btn btn-success btn-full" onclick="processPayment()">تسديد</button>
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3>سداد ديون / إيداع رصيد</h3>
+            <button class="close-modal" onclick="closeModal('payDebtModal')">&times;</button>
         </div>
+        <input type="hidden" id="pay_customerId">
+        <p style="margin-bottom: 5px; font-size: 15px;">العميل: <strong id="pay_cName" style="color:var(--primary)"></strong></p>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px dashed #ccc; padding-bottom: 10px;">
+            <span style="color: var(--danger); font-size: 14px;">مديونية: <strong id="pay_cDebt"></strong></span>
+            <span style="color: var(--success); font-size: 14px;">رصيد: <strong id="pay_cBalance"></strong></span>
+        </div>
+        <div class="form-group" style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+            <label>المبلغ (سيسدد الدين أولاً، والباقي يذهب للرصيد)</label>
+            <input type="number" id="pay_amount" value="0" min="1" style="font-size: 18px; font-weight: bold; text-align: center;">
+        </div>
+        <button class="btn btn-success btn-full" onclick="processPayment()">تنفيذ العملية</button>
     </div>
+</div>
 
     <div id="statementModal" class="modal-overlay">
         <div class="modal-content" style="max-width: 600px;">
@@ -542,46 +937,454 @@
             <div id="receipt-content" style="background: white; padding: 10px; min-height: 200px;"></div>
         </div>
     </div>
-<div id="cloudLoadingModal" class="modal-overlay" style="z-index: 2000;">
-    <div class="modal-content" style="max-width: 300px; text-align: center; padding: 40px 20px;">
-        <div class="loader-spinner" style="width: 50px; height: 50px; border-width: 5px; margin-bottom: 20px;"></div>
-        <h3 id="cloudLoadingText" style="color: var(--primary); margin-bottom: 10px;">جاري الاتصال...</h3>
-        <p style="font-size: 13px; color: #7f8c8d;">يرجى عدم إغلاق الصفحة</p>
-    </div>
-</div>
 
-<div id="cloudAlertModal" class="modal-overlay" style="z-index: 2100;">
-    <div class="modal-content" style="max-width: 350px; text-align: center;">
-        <div class="modal-header" style="border: none; padding-bottom: 0;">
-            <h3 id="cloudAlertTitle" style="width: 100%; color: var(--accent);">تنبيه</h3>
+    <div id="cloudLoadingModal" class="modal-overlay" style="z-index: 2000;">
+        <div class="modal-content" style="max-width: 300px; text-align: center; padding: 40px 20px;">
+            <div class="loader-spinner" style="width: 50px; height: 50px; border-width: 5px; margin-bottom: 20px;"></div>
+            <h3 id="cloudLoadingText" style="color: var(--primary); margin-bottom: 10px;">جاري الاتصال...</h3>
+            <p style="font-size: 13px; color: #7f8c8d;">يرجى عدم إغلاق الصفحة</p>
         </div>
-        <div style="margin: 15px 0;">
-            <p id="cloudAlertMsg" style="font-size: 16px; line-height: 1.6; color: #333;"></p>
-        </div>
-        <button class="btn btn-primary btn-full" onclick="closeModal('cloudAlertModal')">حسناً</button>
     </div>
-</div>
 
-<div id="cloudConfirmModal" class="modal-overlay" style="z-index: 2100;">
+    <div id="cloudAlertModal" class="modal-overlay" style="z-index: 2100;">
+        <div class="modal-content" style="max-width: 350px; text-align: center;">
+            <div class="modal-header" style="border: none; padding-bottom: 0;">
+                <h3 id="cloudAlertTitle" style="width: 100%; color: var(--accent);">تنبيه</h3>
+            </div>
+            <div style="margin: 15px 0;">
+                <p id="cloudAlertMsg" style="font-size: 16px; line-height: 1.6; color: #333;"></p>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="closeModal('cloudAlertModal')">حسناً</button>
+        </div>
+    </div>
+
+    <div id="cloudConfirmModal" class="modal-overlay" style="z-index: 2100;">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header" style="border: none;">
+                <h3 style="color: var(--danger);">⚠️ تأكيد إجراء حساس</h3>
+            </div>
+            <p id="cloudConfirmMsg" style="margin-bottom: 25px; font-size: 15px; line-height: 1.6; color: #555;"></p>
+            
+            <div class="form-grid">
+                <button id="btnConfirmYes" class="btn btn-danger" style="padding: 12px;">نعم، نفذ الإجراء</button>
+                <button class="btn" style="background:#bdc3c7; color:#333;" onclick="closeModal('cloudConfirmModal')">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="returnConfirmModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header" style="border-bottom: none;">
+                <h3 style="color: var(--danger); width: 100%;">⚠️ تأكيد استرجاع الفاتورة</h3>
+            </div>
+            <p style="margin: 15px 0; font-size: 16px;">
+                استرجاع هذه الفاتورة سيقوم بـ:<br>
+                1. إعادة الأصناف المباعة إلى المخزون.<br>
+                2. خصم قيمة الفاتورة من الإيرادات والأرباح.<br>
+                3. إنقاص المديونية إذا كانت الفاتورة (سلف).<br><br>
+                <strong>هل أنت متأكد؟</strong>
+            </p>
+            <input type="hidden" id="returnSaleId">
+            <div class="form-grid">
+                <button class="btn btn-danger" style="padding: 15px; font-size: 16px;" onclick="executeReturnInvoice()">نعم، قم بالاسترجاع</button>
+                <button class="btn" style="background:#bdc3c7; color:#333; padding: 15px; font-size: 16px;" onclick="closeModal('returnConfirmModal')">إلغاء</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="userModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 id="userModalTitle">إضافة مستخدم جديد</h3>
+                <button class="close-modal" onclick="closeModal('userModal')">&times;</button>
+            </div>
+            <input type="hidden" id="u_id">
+            <div class="form-group"><label>الاسم الكامل</label><input type="text" id="u_fullName" placeholder="مثال: أحمد محمد"></div>
+            <div class="form-group"><label>اسم المستخدم (للدخول)</label><input type="text" id="u_username" placeholder="مثال: ahmed"></div>
+            <div class="form-group" id="u_pass_group"><label>كلمة المرور</label><input type="password" id="u_password"></div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>نوع المستخدم</label>
+                    <select id="u_role">
+                        <option value="admin">مدير (صلاحيات كاملة)</option>
+                        <option value="cashier">كاشير (مبيعات فقط)</option>
+                        <option value="employee">موظف مخزن</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>الحالة</label>
+                    <select id="u_status">
+                        <option value="active">نشط (مسموح بالدخول)</option>
+                        <option value="inactive">موقوف (ممنوع)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" style="background:#e8f8f5; padding:10px; border-radius:6px;">
+                <label style="color:var(--primary); font-size:12px;">🔒 تقييد الدخول بجهاز الكاشير فقط؟</label>
+                <select id="u_device">
+                    <option value="all">دخول من أي جهاز</option>
+                    <option value="pos_only">جهاز الكاشير الحالي فقط</option>
+                </select>
+            </div>
+            <button class="btn btn-success btn-full" onclick="saveUser()">حفظ بيانات المستخدم</button>
+        </div>
+    </div>
+
+    <div id="permissionsModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>🛡️ صلاحيات المستخدم: <span id="perm_userName" style="color:var(--accent);"></span></h3>
+                <button class="close-modal" onclick="closeModal('permissionsModal')">&times;</button>
+            </div>
+            <input type="hidden" id="perm_userId">
+            <div class="permissions-container" id="permissionsForm">
+                </div>
+            <button class="btn btn-primary btn-full" onclick="savePermissions()">حفظ الصلاحيات</button>
+        </div>
+    </div>
+
+    <div id="passwordModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 350px;">
+            <div class="modal-header">
+                <h3>🔒 تغيير كلمة المرور</h3>
+                <button class="close-modal" onclick="closeModal('passwordModal')">&times;</button>
+            </div>
+            <input type="hidden" id="pwd_userId">
+            <div class="form-group"><label>كلمة المرور الجديدة</label><input type="password" id="pwd_new"></div>
+            <div class="form-group"><label>تأكيد كلمة المرور</label><input type="password" id="pwd_confirm"></div>
+            <button class="btn btn-danger btn-full" onclick="saveNewPassword()">تحديث كلمة المرور</button>
+        </div>
+    </div>
+<div id="addSafeModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>إضافة/تعديل خزانة</h3>
+                <button class="close-modal" onclick="closeModal('addSafeModal')">&times;</button>
+            </div>
+            <input type="hidden" id="safe_id">
+            <div class="form-group"><label>اسم الخزانة (مثال: الكاشير الرئيسي)</label><input type="text" id="safe_name"></div>
+            <div class="form-group"><label>الفرع / القسم</label><input type="text" id="safe_branch"></div>
+            <div class="form-group"><label>الحد الأعلى للنقد (للتنبيه)</label><input type="number" id="safe_limit" value="50000"></div>
+            <button class="btn btn-success btn-full" onclick="saveSafe()">حفظ الخزانة</button>
+        </div>
+    </div>
+
+    <div id="transferModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>تحويل مالي بين الخزائن</h3>
+                <button class="close-modal" onclick="closeModal('transferModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>من خزانة (سحب)</label>
+                <select id="transfer_from"></select>
+            </div>
+            <div class="form-group">
+                <label>إلى خزانة (إيداع)</label>
+                <select id="transfer_to"></select>
+            </div>
+            <div class="form-group">
+                <label>المبلغ المراد تحويله</label>
+                <input type="number" id="transfer_amount" min="1" style="font-size: 20px; font-weight: bold; text-align: center;">
+            </div>
+            <button class="btn btn-primary btn-full" onclick="executeTransfer()">تنفيذ التحويل</button>
+        </div>
+    </div>
+
+    <div id="shiftModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <h3 id="shiftModalTitle">إدارة الوردية</h3>
+                <button class="close-modal" onclick="closeModal('shiftModal')">&times;</button>
+            </div>
+            
+            <div id="openShiftSection">
+                <div class="form-group">
+                    <label>اختر الخزانة (الصندوق)</label>
+                    <select id="shift_safe_select"></select>
+                </div>
+                <div class="form-group">
+                    <label>الرصيد الافتتاحي (النقد الموجود حالياً)</label>
+                    <input type="number" id="shift_open_balance" value="0">
+                </div>
+                <button class="btn btn-success btn-full" onclick="startShift()">▶️ بدء الوردية</button>
+            </div>
+
+            <div id="closeShiftSection" style="display: none;">
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed #ccc;">
+                    <p style="margin-bottom: 5px;">الرصيد الافتتاحي: <strong id="lbl_open_bal" style="color:var(--primary)">0</strong></p>
+                    <p style="margin-bottom: 5px;">إجمالي المقبوضات (المبيعات): <strong id="lbl_shift_in" style="color:var(--success)">0</strong></p>
+                    <p style="margin-bottom: 5px;">إجمالي المصروفات (السحوبات): <strong id="lbl_shift_out" style="color:var(--danger)">0</strong></p>
+                    <p style="font-size: 16px; font-weight: bold; border-top: 1px solid #ddd; padding-top: 5px; margin-top: 5px;">الرصيد المتوقع (بالنظام): <span id="lbl_expected_bal" style="color:var(--accent)">0</span></p>
+                </div>
+                
+                <div class="form-group" style="background: #fff3cd; padding: 15px; border-radius: 8px;">
+                    <label style="color: #856404; font-weight: bold;">الرصيد الفعلي (قم بعد النقد في الدرج)</label>
+                    <input type="number" id="shift_actual_balance" style="font-size: 20px; text-align: center;" oninput="calcShiftDiff()">
+                </div>
+                
+                <p id="shift_diff_text" style="text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 15px;"></p>
+                
+                <button class="btn btn-danger btn-full" onclick="closeShift()">⏹️ إغلاق الوردية (تأكيد الجرد)</button>
+            </div>
+        </div>
+    </div> 
+    
+    <div id="payFromBalanceModal" class="modal-overlay">
     <div class="modal-content" style="max-width: 400px;">
-        <div class="modal-header" style="border: none;">
-            <h3 style="color: var(--danger);">⚠️ تأكيد إجراء حساس</h3>
+        <div class="modal-header">
+            <h3>💳 الدفع من الرصيد المسبق</h3>
+            <button class="close-modal" onclick="closeModal('payFromBalanceModal')">&times;</button>
         </div>
-        <p id="cloudConfirmMsg" style="margin-bottom: 25px; font-size: 15px; line-height: 1.6; color: #555;"></p>
-        
-        <div class="form-grid">
-            <button id="btnConfirmYes" class="btn btn-danger" style="padding: 12px;">نعم، نفذ الإجراء</button>
-            <button class="btn" style="background:#bdc3c7; color:#333;" onclick="closeModal('cloudConfirmModal')">إلغاء</button>
+        <p style="margin-bottom: 10px; color: var(--danger); font-weight: bold; text-align: center; font-size: 18px;">قيمة الفاتورة: <span id="balanceModalTotal">0</span></p>
+
+        <div class="form-group">
+            <input type="text" id="balanceCustomerSearch" class="search-input" placeholder="🔍 ابحث باسم العميل (ف، فه، فهد)..." onkeyup="searchBalanceCustomers()">
+        </div>
+
+        <div id="balanceCustomerResults" class="unit-grid" style="max-height: 200px; overflow-y: auto;">
+            </div>
+
+        <div id="balancePaymentAction" style="display: none; margin-top: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center; border: 1px dashed #ccc;">
+            <p style="margin-bottom: 5px; font-size: 14px;">العميل: <strong id="balanceSelectedCustomerName" style="color: var(--primary); font-size: 16px;"></strong></p>
+            <p style="margin-bottom: 15px; font-size: 14px;">الرصيد المتاح: <strong id="balanceSelectedCustomerAvailable" style="color: var(--success); font-size: 16px;"></strong></p>
+            <input type="hidden" id="balanceSelectedCustomerId">
+            <button class="btn btn-success btn-full" style="font-size: 16px; padding: 15px;" onclick="executeBalancePayment()">✔️ تأكيد الدفع والخصم من الرصيد</button>
         </div>
     </div>
 </div>
-    <script src="js/utils.js"></script>
-    <script src="js/db.js"></script>
-    <script src="js/ui.js"></script>
+    
+    <div id="activityLogModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>📋 سجل نشاط النظام</h3>
+                <button class="close-modal" onclick="closeModal('activityLogModal')">&times;</button>
+            </div>
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <table>
+                    <thead><tr><th>الوقت</th><th>المستخدم</th><th>العملية / النشاط</th><th>الجهاز</th></tr></thead>
+                    <tbody id="activityLogTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div id="addSupplierModal" class="modal-overlay" style="z-index: 1050;">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3>إضافة/تعديل مورد</h3>
+            <button class="close-modal" onclick="closeModal('addSupplierModal')">&times;</button>
+        </div>
+        <div class="form-group"><label>اسم المورد</label><input type="text" id="sup_name"></div>
+        <div class="form-group"><label>رقم الهاتف</label><input type="text" id="sup_phone"></div>
+        <div class="form-group"><label>الرصيد الافتتاحي (لنا - / له +)</label><input type="number" id="sup_balance" value="0"></div>
+        <div class="form-group"><label>الحد الائتماني المسموح</label><input type="number" id="sup_limit" value="0"></div>
+        <button class="btn btn-success btn-full" onclick="saveSupplier()">حفظ المورد</button>
+    </div>
+</div>
+
+<div id="addProductModal" class="modal-overlay" style="z-index: 1050;">
+    </div>
+
+<div id="paySupplierModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3>سداد دفعة لمورد</h3>
+            <button class="close-modal" onclick="closeModal('paySupplierModal')">&times;</button>
+        </div>
+        <input type="hidden" id="pay_supId">
+        <p>المورد: <strong id="pay_supName" style="color:var(--primary)"></strong></p>
+        <p style="margin-bottom: 15px;">الرصيد المستحق (دائن): <strong id="pay_supDebt" style="color:var(--danger)"></strong></p>
+        
+        <div class="form-group">
+            <label>المبلغ المراد سداده</label>
+            <input type="number" id="pay_supAmount" min="1" style="font-size: 18px; text-align: center;">
+        </div>
+        <div class="form-group">
+            <label>الخزانة / الصندوق (لخصم المبلغ)</label>
+            <select id="pay_supSafe"></select>
+        </div>
+        <button class="btn btn-success btn-full" onclick="processSupplierPayment()">تنفيذ الدفع</button>
+    </div>
+</div>
+
+<div id="addPurchaseModal" class="modal-overlay" style="z-index: 800;">
+    <div class="modal-content" style="max-width: 800px; height: 90vh; display: flex; flex-direction: column; padding: 15px;">
+        
+        <div class="modal-header" style="flex-shrink: 0; margin-bottom: 10px; padding-bottom: 5px;">
+            <h3 style="font-size: 16px;">🧾 إنشاء فاتورة شراء</h3>
+            <button class="close-modal" onclick="closeModal('addPurchaseModal')">&times;</button>
+        </div>
+        
+        <div class="form-grid" style="flex-shrink: 0; margin-bottom: 10px; background: #f8f9fa; padding: 10px; border-radius: 8px; gap: 10px;">
+            <div class="form-group" style="position: relative; overflow: visible; margin-bottom: 0;">
+                <label style="font-size: 12px;">المورد</label>
+                <div style="display: flex; gap: 5px;">
+                    <input type="text" id="pur_supplier_search" class="search-input" style="padding: 8px; margin-bottom:0; flex:1; font-size: 13px;" placeholder="🔍 ابحث..." onkeyup="filterPurSuppliers()" onfocus="showPurSuppliersList()">
+                    <button class="btn btn-success" style="padding: 5px 10px; font-size: 12px;" onclick="openModal('addSupplierModal')">➕ جديد</button>
+                </div>
+                <div id="pur_supplier_list" style="display:none; position:absolute; top:65px; right:0; width:100%; max-height:150px; overflow-y:auto; background:#fff; border:1px solid #ccc; z-index:1000; border-radius:5px; box-shadow:0 4px 10px rgba(0,0,0,0.1);"></div>
+                <input type="hidden" id="pur_supplier_id">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+                <label style="font-size: 12px;">طريقة الدفع</label>
+                <select id="pur_paymentType" style="padding: 8px; font-size: 13px;" onchange="togglePurchaseSafe()">
+                    <option value="cash">نقدي (صندوق)</option>
+                    <option value="credit">آجل (دين)</option>
+                </select>
+            </div>
+            <div class="form-group" id="pur_safeGroup" style="margin-bottom: 0;">
+                <label style="font-size: 12px;">الصندوق الدائن</label>
+                <select id="pur_safe" style="padding: 8px; font-size: 13px;"></select>
+            </div>
+        </div>
+
+        <div style="flex-shrink: 0; margin-bottom: 5px; display:flex; justify-content:space-between; align-items:center;">
+            <h4 style="color:var(--primary); font-size: 14px;">الأصناف المشتراة</h4>
+            <button class="btn btn-primary" style="padding: 6px 10px; font-size:12px;" onclick="openPurItemModal()">➕ صنف للفاتورة</button>
+        </div>
+        
+        <div class="table-responsive" style="flex: 1; overflow-y: auto; border: 1px solid #eee; border-radius: 6px; min-height: 150px;">
+            <table style="min-width: 500px;">
+                <thead>
+                    <tr>
+                        <th style="padding: 8px; font-size: 12px;">الصنف</th>
+                        <th style="padding: 8px; font-size: 12px;">الكمية</th>
+                        <th style="padding: 8px; font-size: 12px;">الوحدة</th>
+                        <th style="padding: 8px; font-size: 12px;">سعر الشراء</th>
+                        <th style="padding: 8px; font-size: 12px;">الإجمالي</th>
+                        <th style="padding: 8px; font-size: 12px;">🗑️</th>
+                    </tr>
+                </thead>
+                <tbody id="purchaseItemsBody"></tbody>
+            </table>
+        </div>
+
+        <div style="flex-shrink: 0; margin-top:10px; border-top:2px dashed #ccc; padding-top:10px; display:flex; flex-wrap: wrap; justify-content:space-between; align-items:center; gap: 10px;">
+            <div style="flex:1; min-width: 120px;">
+                <div class="form-group" style="margin-bottom: 0;"><label style="font-size: 12px;">الخصم</label><input type="number" id="pur_discount" value="0" style="padding: 8px;" oninput="calculatePurchaseTotal()"></div>
+            </div>
+            <div style="text-align:left; min-width: 150px;">
+                <p style="font-size: 12px; margin-bottom: 2px;">فرعي: <strong id="pur_subtotal">0</strong></p>
+                <h3 style="color:var(--danger); font-size: 18px; margin-top: 5px;">الصافي: <span id="pur_grandTotal">0</span></h3>
+            </div>
+        </div>
+        <button class="btn btn-success btn-full" style="flex-shrink: 0; padding: 12px; font-size: 15px; margin-top: 10px;" onclick="savePurchaseInvoice()">💾 حفظ الفاتورة وتحديث المخزون</button>
+    </div>
+</div>
+
+
+<div id="addProductModal" class="modal-overlay" style="z-index: 700;">
+    </div>
+
+<div id="purSelectItemModal" class="modal-overlay" style="z-index: 900;">
+    <div class="modal-content" style="max-width: 450px;">
+        <div class="modal-header">
+            <h3>اختر الصنف للمشتريات</h3>
+            <button class="close-modal" onclick="closeModal('purSelectItemModal')">&times;</button>
+        </div>
+        <div style="display: flex; gap: 5px; margin-bottom: 15px;">
+            <input type="text" id="purItemSearchInput" class="search-input" style="margin-bottom:0; flex:1;" placeholder="🔍 ابحث بالاسم أو الباركود..." onkeyup="filterPurItems()">
+            <button class="btn btn-success" onclick="openModal('addProductModal')">➕ صنف جديد</button>
+        </div>
+        <div id="purItemSelectionList" style="max-height: 300px; overflow-y: auto;"></div>
+    </div>
+</div>
+
+<div id="supplierStatementModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 650px;">
+        <div class="modal-header">
+            <h3>كشف حساب وفواتير المورد</h3>
+            <button class="close-modal" onclick="closeModal('supplierStatementModal')">&times;</button>
+        </div>
+        <div style="background: #eef2f5; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <p style="margin-bottom: 5px;">المورد: <strong id="stmt_supName"></strong></p>
+                <p>الرصيد الحالي: <strong id="stmt_supBalance" style="color:var(--danger); font-size:16px;"></strong></p>
+            </div>
+            <button class="btn btn-primary" id="btnPrintSupplierStatement" style="font-size: 14px; background-color: #34495e;">🖨️ طباعة / مشاركة الكشف</button>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead><tr><th>التاريخ</th><th>البيان</th><th>مدين (له)</th><th>دائن (تسديدات)</th></tr></thead>
+                <tbody id="supplierStatementBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="editPurchaseModal" class="modal-overlay" style="z-index: 850;">
+    <div class="modal-content" style="max-width: 800px; height: 90vh; display: flex; flex-direction: column; padding: 15px;">
+        
+        <div class="modal-header" style="flex-shrink: 0; margin-bottom: 10px; padding-bottom: 5px;">
+            <h3 style="font-size: 16px;">✏️ تعديل / استرجاع مشتريات #<span id="edit_pur_id_display"></span></h3>
+            <button class="close-modal" onclick="closeModal('editPurchaseModal')">&times;</button>
+        </div>
+        
+        <div class="table-responsive" style="flex: 1; overflow-y: auto; border: 1px solid #eee; border-radius: 6px; min-height: 150px;">
+            <table style="min-width: 500px;">
+                <thead>
+                    <tr>
+                        <th style="padding: 8px; font-size: 12px;">الصنف</th>
+                        <th style="padding: 8px; font-size: 12px;">الكمية</th>
+                        <th style="padding: 8px; font-size: 12px;">الوحدة</th>
+                        <th style="padding: 8px; font-size: 12px;">سعر الشراء</th>
+                        <th style="padding: 8px; font-size: 12px;">الإجمالي</th>
+                        <th style="padding: 8px; font-size: 12px;">🗑️</th>
+                    </tr>
+                </thead>
+                <tbody id="editPurchaseItemsBody"></tbody>
+            </table>
+        </div>
+
+        <div style="flex-shrink: 0; margin-top:10px; border-top:2px dashed #ccc; padding-top:10px; display:flex; flex-wrap: wrap; justify-content:space-between; align-items:center; gap: 10px;">
+            <div style="flex:1; min-width: 120px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="font-size: 12px;">الخصم</label>
+                    <input type="number" id="edit_pur_discount" value="0" style="padding: 8px;" oninput="calcEditPurchaseTotals()">
+                </div>
+            </div>
+            <div style="text-align:left; min-width: 150px;">
+                <p style="font-size: 12px; margin-bottom: 2px;">فرعي: <strong id="edit_pur_subtotal">0</strong></p>
+                <h3 style="color:var(--danger); font-size: 18px; margin-top: 5px;">الصافي: <span id="edit_pur_grandTotal">0</span></h3>
+            </div>
+        </div>
+
+        <div class="form-grid" style="flex-shrink: 0; margin-top: 15px; gap: 10px;">
+            <button class="btn btn-warning" style="padding: 12px; font-size: 15px;" onclick="savePurchaseModifications()">💾 حفظ التعديلات</button>
+            <button class="btn btn-danger" style="padding: 12px; font-size: 15px;" onclick="returnAllPurchaseItems()">↩️ استرجاع كافة الأصناف</button>
+        </div>
+    </div>
+</div>
+    <div id="overviewModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 900px; width: 95%;">
+        <div class="modal-header">
+            <h2>📊 النظرة العامة والتقارير</h2>
+            <span class="close-modal" onclick="closeModal('overviewModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <h3 style="margin-bottom: 15px; color: var(--primary);">📈 حركة المبيعات في آخر 7 أيام</h3>
+                <div id="dailySalesChart" style="margin-top: 15px; max-height: 400px; overflow-y: auto;"></div>
+                    </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/chart.umd.min.js"></script>
+    <script src="js/ui&utils.js"></script>
     <script src="js/products.js"></script>
-    <script src="js/customers.js"></script>
+    <script src="js/customers&db.js"></script>
     <script src="js/pos.js"></script>
     <script src="js/reports.js"></script>
+    <script src="js/treasury.js"></script> 
     <script src="js/cloud.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/users.js"></script>
+    <script src="js/backup.js"></script>
+    <script src="js/html5-qrcode.min.js"></script>
+    <script src="js/html2canvas.min.js"></script>
 </body>
 </html>
