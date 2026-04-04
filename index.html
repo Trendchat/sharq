@@ -1,19 +1,33 @@
-<div class="reportsScreen">
-    <!-- New Invoice Search Interface -->
-    <div class="search-invoice">
-        <input type="text" placeholder="🔍 ابحث برقم الفاتورة..." aria-label="Search by Invoice Number" />
-        <input type="text" placeholder="🔍 ابحث باسم العميل..." aria-label="Search by Customer Name" />
-    </div>
-    
-    <!-- Existing Filter Modal - updated to include date range -->
-    <div class="filter-modal">
-        <h3>Filter Invoices</h3>
-        <label for="date-range">تاريخ الدفع (من):</label>
-        <input type="date" id="date-range" />
-    </div>
-    
-    <!-- Existing Statistics Cards -->
-    <div class="statistics-cards">
-        <!-- Statistics Cards Content -->
-    </div>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Search</title>
+</head>
+<body>
+    <header>
+        <h1>Invoice Search</h1>
+    </header>
+    <main>
+        <form id="searchForm">
+            <label for="invoiceNumber">Invoice Number:</label>
+            <input type="text" id="invoiceNumber" name="invoiceNumber">
+            <label for="customerName">Customer Name:</label>
+            <input type="text" id="customerName" name="customerName">
+            <button type="submit">Search</button>
+        </form>
+        <div id="searchResults"></div>
+    </main>
+    <script>
+        document.getElementById('searchForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const invoiceNumber = document.getElementById('invoiceNumber').value;
+            const customerName = document.getElementById('customerName').value;
+
+            // Placeholder for search logic
+            document.getElementById('searchResults').innerHTML = `<p>Searching for Invoice Number: ${invoiceNumber} and Customer Name: ${customerName}</p>`;
+        });
+    </script>
+</body>
+</html>
