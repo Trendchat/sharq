@@ -3,31 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice Search</title>
+    <title>Sharq Invoice Search</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <header>
-        <h1>Invoice Search</h1>
+        <h1>Sharq Invoice Search</h1>
     </header>
     <main>
-        <form id="searchForm">
-            <label for="invoiceNumber">Invoice Number:</label>
-            <input type="text" id="invoiceNumber" name="invoiceNumber">
-            <label for="customerName">Customer Name:</label>
-            <input type="text" id="customerName" name="customerName">
-            <button type="submit">Search</button>
-        </form>
-        <div id="searchResults"></div>
+        <section id="search-section">
+            <form id="invoice-search-form">
+                <label for="invoice-number">Invoice Number:</label>
+                <input type="text" id="invoice-number" name="invoice-number" required>
+                <button type="submit">Search</button>
+            </form>
+            <div id="results"></div>
+        </section>
+        <section id="modal-section">
+            <div id="modal" class="modal">
+                <div class="modal-content">
+                    <span class="close-button">&times;</span>
+                    <h2>Invoice Details</h2>
+                    <p id="invoice-details">Details will be populated here.</p>
+                </div>
+            </div>
+        </section>
     </main>
-    <script>
-        document.getElementById('searchForm').addEventListener('submit', function (event) {
-            event.preventDefault();
-            const invoiceNumber = document.getElementById('invoiceNumber').value;
-            const customerName = document.getElementById('customerName').value;
-
-            // Placeholder for search logic
-            document.getElementById('searchResults').innerHTML = `<p>Searching for Invoice Number: ${invoiceNumber} and Customer Name: ${customerName}</p>`;
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
